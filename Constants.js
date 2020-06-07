@@ -1,0 +1,13 @@
+export const MON = 'Mon';
+export const TUE = 'Tue';
+export const WED = 'Wed';
+export const THU = 'Thu';
+export const FRI = 'Fri';
+export const SAT = 'Sat';
+export const SUN = 'Sun';
+export const DAILY = 'daily';
+export const WEEKLY = 'weekly';
+export const MONTHLY = 'monthly';
+export const YEARLY = 'yearly';
+export const TODAY = 'today';
+export const TOMORROW = 'tomorrow';
