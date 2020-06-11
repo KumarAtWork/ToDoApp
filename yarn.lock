@@ -1151,6 +1151,13 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/picker/-/picker-1.6.1.tgz#f893bf4982e549c954696d08a47e1d8e72762310"
   integrity sha512-JuCOtim1tZhB3KoJhbuPj3pFweUnj4XgukktJk0MyUOB8wA3uCEHW+xsGYu8ZDYiyR0M6qXctz7Fz2qYFuTUSQ==
 
+"@react-native-community/push-notification-ios@^1.2.0":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@react-native-community/push-notification-ios/-/push-notification-ios-1.2.2.tgz#e4437a89bddca2cdeac96d17e02cde34336caaf3"
+  integrity sha512-0+DL68CgH5TF8WKwdjI9pul+mPKChGk9uHYcMJ0C6b296W5BQVaBQP6On2QYOgL/EWOWNWeBenW65FjKzWFf0g==
+  dependencies:
+    invariant "^2.2.4"
+
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
@@ -2344,7 +2351,7 @@ expo-web-browser@~8.2.1:
   dependencies:
     compare-urls "^2.0.0"
 
-expo@~37.0.3:
+expo@^37.0.12:
   version "37.0.12"
   resolved "https://registry.yarnpkg.com/expo/-/expo-37.0.12.tgz#9e1a7ce138cd6c580a112e20992754c7c7e9c97e"
   integrity sha512-roqGc7zTh3esYxAi95AWpNkrztO6istuKQNfYNwHbWmHbqbilZLzRNb844WWK++Uy4UxaObO5ymmacZyq4JnwA==
@@ -4277,6 +4284,20 @@ react-is@^16.12.0, react-is@^16.8.1, react-is@^16.8.4:
   version "16.13.1"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
+
+react-native-modal-datetime-picker@^8.7.1:
+  version "8.7.1"
+  resolved "https://registry.yarnpkg.com/react-native-modal-datetime-picker/-/react-native-modal-datetime-picker-8.7.1.tgz#9769492f3e61d48bad06817f8986cb8be4a46acc"
+  integrity sha512-wcP8WRe9uDqWF9KdScItkDSfJ3w/xi4fGAe8Q9xvU15+7sWWCHDJzXMlRv2Jeeu7MIlHS6XBisTprvqBcqjwtA==
+  dependencies:
+    prop-types "^15.7.2"
+
+react-native-push-notification@^3.5.2:
+  version "3.5.2"
+  resolved "https://registry.yarnpkg.com/react-native-push-notification/-/react-native-push-notification-3.5.2.tgz#5f6226d12a00c25c15279325b57c5fbddd5b1c82"
+  integrity sha512-eh9l7WeL7Lxq17ntsafCrNQF6aW8XS6b7PG/s1Y8amAqpDt8GJ8hz125z566N1jsj3PDh9pfd4SjNS+tLaV47A==
+  dependencies:
+    "@react-native-community/push-notification-ios" "^1.2.0"
 
 react-native-view-shot@3.1.2:
   version "3.1.2"

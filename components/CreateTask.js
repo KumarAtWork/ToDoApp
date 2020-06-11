@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react'
-import { View, Modal, ScrollView, Text, Image, TextInput, Platform, StyleSheet, Switch, TouchableHighlight, TouchableOpacity } from 'react-native'
-import DateTimePicker from '@react-native-community/datetimepicker'
+import { View, Vibration, Modal, ScrollView, Text, Image, TextInput, Platform, StyleSheet, Switch, TouchableHighlight, TouchableOpacity, Button } from 'react-native'
+import DateTimePicker from 'react-native-modal-datetime-picker'
 import calendarIcon from '../assets/calendar.png'
 import { Picker } from '@react-native-community/picker'
 import * as TODO_CONST from '../Constants'
+import { Notifications } from 'expo';
+import * as Permissions from 'expo-permissions';
+import Constants from 'expo-constants';
+
 
 const CreateTask = () => {
-    const [date, setDate] = useState(new Date());
-    const [mode, setMode] = useState('date');
-    const [show, setShow] = useState(false);
+    // date time picker
     const [value, setValue] = useState(false);
+    const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
+    const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
+    const [isDateTimePickerVisible, setDateTimePickerVisibility] = useState(false);
 
     const [activeBtn, setActiveBtn] = useState('daily');
     const [dailyBtnColor, SetDailyBtnColor] = useState(styles.btnActive)
@@ -40,53 +45,111 @@ const CreateTask = () => {
     const [sunBtnColor, SetSunBtnColor] = useState(styles.btnInActive);
     const [selectedWeekDays, setSelectedWeekDays] = useState('');
     
+    // Task Details
+    const [title, setTitle] = useState('');
+    const [desc, setDesc]  = useState('');
     const [selectedSchedule, setSelectedSchedule] = useState('');
     const [selectedStartDate, setSelectedStartDate] = useState(new Date());
     const [selectedEndDate, setSelectedEndDate] = useState(new Date());
     const [dateType, setDateType] = useState('');
     const [reminder, setReminder] = useState('');
+    const [expoPushToken, setExpoPushToken] = useState('');
+    const [notification, setNotification] =  useState({});
+
+
+
+    const registerForPushNotificationsAsync = async () => {
+        if (Constants.isDevice) {
+          const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+          let finalStatus = existingStatus;
+          if (existingStatus !== 'granted') {
+            const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+            finalStatus = status;
+          }
+          if (finalStatus !== 'granted') {
+            alert('Failed to get push token for push notification!');
+            return;
+          }
+          token = await Notifications.getExpoPushTokenAsync();
+          console.log(token);
+          setExpoPushToken(token);
+        } else {
+          alert('Must use physical device for Push Notifications');
+        }
     
-    const onChange = (event, selectedDate) => {
-        const currentDate = selectedDate || date;
-        setShow(Platform.OS === 'ios');
-        setDate(currentDate);
-        console.log('mode --'+mode);
-        if(mode=='date'){
-        if(dateType=='startDate')setSelectedStartDate(currentDate);
-        if(dateType=='endDate')setSelectedEndDate(currentDate);
+        if (Platform.OS === 'android') {
+          Notifications.createChannelAndroidAsync('default', {
+            name: 'default',
+            sound: true,
+            priority: 'max',
+            vibrate: [0, 250, 250, 250],
+          });
         }
-        else if(mode === 'time')
-           setReminder(currentDate.getHours()+':'+currentDate.getMinutes());
-    };
+      };
 
-    const showMode = currentMode => {
-        setShow(true);
-        setMode(currentMode);
-    };
+     const _handleNotification = notification => {
+        Vibration.vibrate();
+        console.log(notification);
+        setNotification(notification);
+      };
 
-    const showDatepicker = (dateType) => {
-        showMode('date');
-        console.log('dateType:'+dateType);
-        switch(dateType){
-            case 'startDate': setDateType('startDate'); break;
-            case 'endDate': setDateType('endDate'); break;
-        }
-    };
+      useEffect(()=>{
+        registerForPushNotificationsAsync();
 
-    const showTimepicker = () => {
-        showMode('time');
-    };
+        // Handle notifications that are received or selected while the app
+        // is open. If the app was closed and then opened by tapping the
+        // notification (rather than just tapping the app icon to open it),
+        // this function will fire on the next tick after the app starts
+        // with the notification data.
+        _notificationSubscription = Notifications.addListener(_handleNotification);
+      },[]);
+
+      const scheduleNotification = async () => {
+        let notificationId = Notifications.scheduleLocalNotificationAsync(
+          {
+            title: title,
+            body: desc,
+            sound:true
+          },
+          {
+            time:reminder
+          }
+        );
+        console.log(notificationId);
+      };
+    
+
 
     const getMaximumDate = todayDate => {
         const nextYear = todayDate.getFullYear() + 1;
         const dt = new Date().setFullYear(nextYear);
         return new Date(dt);
     }
-    const getBtnColor = () => {
-        if (count > 0) {
 
-        }
-    }
+  const hideDatePicker = () => {
+    setStartDatePickerVisibility(false);
+    setEndDatePickerVisibility(false); 
+    setDateTimePickerVisibility(false);
+  };
+ 
+  const reminderHandler = (date) => {
+    console.warn("A Reminder date has been picked: ", date);
+    setDateTimePickerVisibility(false);
+    Notifications.cancelAllScheduledNotificationsAsync();
+    setReminder(date);
+  };
+
+  const startDateHandler = (date) =>{
+    console.warn("Start Date has been picked: ", date);
+    setStartDatePickerVisibility(false);
+    setSelectedStartDate(date);
+  }
+
+  const endDateHandler = (date) =>{
+    console.warn("End Date has been picked: ", date);
+    setEndDatePickerVisibility(false);
+    setSelectedEndDate(date);
+  }
 
     const btnPressHandler = (val) => {
         const act = activeBtn;
@@ -145,7 +208,7 @@ const CreateTask = () => {
                 break;
             case 'other': SetOtherBtnColor(styles.btnActive);
                 setActiveStartDate(val);
-                showDatepicker('startDate');
+                setStartDatePickerVisibility(true);
                 break;
         }
     }
@@ -237,16 +300,22 @@ const CreateTask = () => {
 
     const addTaskHandler = () =>{
         console.log('Task crearted');
-        console.log('Task Schedule:'+selectedSchedule +' start date:'+selectedStartDate.getDate()
+        console.log('Title'+title+'Desc:'+desc+'Task Schedule:'+selectedSchedule +' start date:'+selectedStartDate.getDate()
            +'end date:'+selectedEndDate.getDate()+'reminder:'+reminder);
+        scheduleNotification(title,reminder);   
     }
-
+    const handleButtonPress = () => {
+        LocalNotification()
+      }
     return (<View>
         <View>
             <Text style={styles.screenTitle}>Create Task</Text>
         </View>
         <View style={styles.taskTitle} >
-            <TextInput style={{ fontSize: 18, textAlignVertical: "top" }} multiline={true} numberOfLines={5} maxLength={300} placeholder='Title' />
+            <TextInput onChangeText={text=>setTitle(text)} style={{ fontSize: 18}} maxLength={100} placeholder='Title' />
+        </View>
+        <View style={styles.taskTitle} >
+            <TextInput onChangeText={text=>setDesc(text)} style={{ fontSize: 18, textAlignVertical: "top" }} multiline={true} numberOfLines={5} maxLength={300} placeholder='Description' />
         </View>
 
         <View style={styles.switchTaskType}>
@@ -452,7 +521,7 @@ const CreateTask = () => {
                     <Text style={styles.taskLabel}>End Date :</Text>
                 </View>
                 <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
-                    onPress={()=>showDatepicker('endDate')}>
+                    onPress={()=>setEndDatePickerVisibility(true)}>
                     <Image style={{
                         padding: 1,
                         height: 25,
@@ -462,12 +531,11 @@ const CreateTask = () => {
                 </TouchableHighlight>
             </View>
             }
-
             <View>
                 <Text style={styles.taskLabel}>Set Reminder :</Text>
             </View>
             <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
-                onPress={showTimepicker}>
+                onPress={()=>setDateTimePickerVisibility(true)}>
                 <Image style={{
                     padding: 1,
                     height: 25,
@@ -479,20 +547,25 @@ const CreateTask = () => {
             <TouchableHighlight style={{ ...styles.addTask, ...styles.btnActive }} onPress={addTaskHandler}>
                 <Text style={{ ...styles.buttontText, fontWeight: "bold", fontSize: 18 }}> Add Task </Text>
             </TouchableHighlight>
-
-            {show && (
-                <DateTimePicker
-                    testID="dateTimePicker"
-                    timeZoneOffsetInMinutes={0}
-                    value={date}
-                    mode={mode}
-                    is24Hour={true}
-                    display="default"
-                    onChange={onChange}
-                    minimumDate={date}
-                    maximumDate={getMaximumDate(date)}
-                />
-            )}
+       
+            <DateTimePicker
+        isVisible={isStartDatePickerVisible}
+        mode="date"
+        onConfirm={startDateHandler}
+        onCancel={hideDatePicker}
+      />
+       <DateTimePicker
+        isVisible={isEndDatePickerVisible}
+        mode="date"
+        onConfirm={endDateHandler}
+        onCancel={hideDatePicker}
+      />
+      <DateTimePicker
+        isVisible={isDateTimePickerVisible}
+        mode="datetime"
+        onConfirm={reminderHandler}
+        onCancel={hideDatePicker}
+      />
         </ScrollView>
     </View>
 
