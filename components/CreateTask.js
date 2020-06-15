@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { View, Vibration, Modal, ScrollView, Text, Image, TextInput, Platform, StyleSheet, Switch, TouchableHighlight, TouchableOpacity, Button } from 'react-native'
+import { AsyncStorage,View,Vibration, Modal, ScrollView, Text, Image, TextInput, Platform, StyleSheet, Switch, TouchableHighlight, TouchableOpacity, Button } from 'react-native'
 import DateTimePicker from 'react-native-modal-datetime-picker'
 import calendarIcon from '../assets/calendar.png'
-import { Picker } from '@react-native-community/picker'
+import { Picker } from 'native-base'
 import * as TODO_CONST from '../Constants'
 import { Notifications } from 'expo';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
 
+const storage_task = '@save_task'
 
 const CreateTask = () => {
     // date time picker
@@ -44,56 +45,56 @@ const CreateTask = () => {
     const [satBtnColor, SetSatBtnColor] = useState(styles.btnInActive);
     const [sunBtnColor, SetSunBtnColor] = useState(styles.btnInActive);
     const [selectedWeekDays, setSelectedWeekDays] = useState('');
-    
+
     // Task Details
     const [title, setTitle] = useState('');
-    const [desc, setDesc]  = useState('');
+    const [desc, setDesc] = useState('');
     const [selectedSchedule, setSelectedSchedule] = useState('');
     const [selectedStartDate, setSelectedStartDate] = useState(new Date());
     const [selectedEndDate, setSelectedEndDate] = useState(new Date());
-    const [dateType, setDateType] = useState('');
     const [reminder, setReminder] = useState('');
     const [expoPushToken, setExpoPushToken] = useState('');
-    const [notification, setNotification] =  useState({});
+    const [notification, setNotification] = useState({});
 
 
 
     const registerForPushNotificationsAsync = async () => {
         if (Constants.isDevice) {
-          const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
-          let finalStatus = existingStatus;
-          if (existingStatus !== 'granted') {
-            const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
-            finalStatus = status;
-          }
-          if (finalStatus !== 'granted') {
-            alert('Failed to get push token for push notification!');
-            return;
-          }
-          token = await Notifications.getExpoPushTokenAsync();
-          console.log(token);
-          setExpoPushToken(token);
+            const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+            let finalStatus = existingStatus;
+            if (existingStatus !== 'granted') {
+                const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+                finalStatus = status;
+            }
+            if (finalStatus !== 'granted') {
+                alert('Failed to get push token for push notification!');
+                return;
+            }
+            // Checking for local     
+            //     token = await Notifications.getExpoPushTokenAsync();
+            //     console.log(token);
+            //     setExpoPushToken(token);
         } else {
-          alert('Must use physical device for Push Notifications');
+            alert('Must use physical device for Push Notifications');
         }
-    
-        if (Platform.OS === 'android') {
-          Notifications.createChannelAndroidAsync('default', {
-            name: 'default',
-            sound: true,
-            priority: 'max',
-            vibrate: [0, 250, 250, 250],
-          });
-        }
-      };
 
-     const _handleNotification = notification => {
+        if (Platform.OS === 'android') {
+            Notifications.createChannelAndroidAsync('default', {
+                name: 'default',
+                sound: true,
+                priority: 'max',
+                vibrate: [0, 250, 250, 250],
+            });
+        }
+    };
+
+    const _handleNotification = notification => {
         Vibration.vibrate();
         console.log(notification);
         setNotification(notification);
-      };
+    };
 
-      useEffect(()=>{
+    useEffect(() => {
         registerForPushNotificationsAsync();
 
         // Handle notifications that are received or selected while the app
@@ -102,22 +103,22 @@ const CreateTask = () => {
         // this function will fire on the next tick after the app starts
         // with the notification data.
         _notificationSubscription = Notifications.addListener(_handleNotification);
-      },[]);
+    }, []);
 
-      const scheduleNotification = async () => {
+    const scheduleNotification = async () => {
         let notificationId = Notifications.scheduleLocalNotificationAsync(
-          {
-            title: title,
-            body: desc,
-            sound:true
-          },
-          {
-            time:reminder
-          }
+            {
+                title: title,
+                body: desc,
+                sound: true
+            },
+            {
+                time: reminder
+            }
         );
         console.log(notificationId);
-      };
-    
+    };
+
 
 
     const getMaximumDate = todayDate => {
@@ -126,30 +127,30 @@ const CreateTask = () => {
         return new Date(dt);
     }
 
-  const hideDatePicker = () => {
-    setStartDatePickerVisibility(false);
-    setEndDatePickerVisibility(false); 
-    setDateTimePickerVisibility(false);
-  };
- 
-  const reminderHandler = (date) => {
-    console.warn("A Reminder date has been picked: ", date);
-    setDateTimePickerVisibility(false);
-    Notifications.cancelAllScheduledNotificationsAsync();
-    setReminder(date);
-  };
+    const hideDatePicker = () => {
+        setStartDatePickerVisibility(false);
+        setEndDatePickerVisibility(false);
+        setDateTimePickerVisibility(false);
+    };
 
-  const startDateHandler = (date) =>{
-    console.warn("Start Date has been picked: ", date);
-    setStartDatePickerVisibility(false);
-    setSelectedStartDate(date);
-  }
+    const reminderHandler = (date) => {
+        console.warn("A Reminder date has been picked: ", date);
+        setDateTimePickerVisibility(false);
+        Notifications.cancelAllScheduledNotificationsAsync();
+        setReminder(date);
+    };
 
-  const endDateHandler = (date) =>{
-    console.warn("End Date has been picked: ", date);
-    setEndDatePickerVisibility(false);
-    setSelectedEndDate(date);
-  }
+    const startDateHandler = (date) => {
+        console.warn("Start Date has been picked: ", date);
+        setStartDatePickerVisibility(false);
+        setSelectedStartDate(date);
+    }
+
+    const endDateHandler = (date) => {
+        console.warn("End Date has been picked: ", date);
+        setEndDatePickerVisibility(false);
+        setSelectedEndDate(date);
+    }
 
     const btnPressHandler = (val) => {
         const act = activeBtn;
@@ -171,6 +172,7 @@ const CreateTask = () => {
                 setSelectedSchedule(TODO_CONST.WEEKLY);
                 break;
             case 'weekdays': SetWeekDaysBtnColor(styles.btnActive);
+                setWeekDaysModalVisible(true);
                 setActiveBtn(val);
                 break;
             case 'monthly': SetMonthlyBtnColor(styles.btnActive);
@@ -203,7 +205,7 @@ const CreateTask = () => {
             case 'tomorrow': SetTomorrowBtnColor(styles.btnActive);
                 setActiveStartDate(val);
                 var tomorrow = new Date();
-                tomorrow.setDate(new Date().getDate()+1);
+                tomorrow.setDate(new Date().getDate() + 1);
                 setSelectedStartDate(tomorrow);
                 break;
             case 'other': SetOtherBtnColor(styles.btnActive);
@@ -236,21 +238,21 @@ const CreateTask = () => {
         if (monBtnColor === styles.btnActive)
             selectedWeekDays == '' ? setSelectedWeekDays(TODO_CONST.MON) : setSelectedWeekDays(selectedWeekDays.concat(',').concat(TODO_CONST.MON));
         else
-           setSelectedWeekDays(selectedWeekDays.length>3?selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.MON).join(','):'');
+            setSelectedWeekDays(selectedWeekDays.length > 3 ? selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.MON).join(',') : '');
     }, [monBtnColor])
 
     useEffect(() => {
         if (tueBtnColor === styles.btnActive)
             selectedWeekDays == '' ? setSelectedWeekDays(TODO_CONST.TUE) : setSelectedWeekDays(selectedWeekDays.concat(',').concat(TODO_CONST.TUE));
         else
-           setSelectedWeekDays(selectedWeekDays.length>3?selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.TUE).join(','):'');
+            setSelectedWeekDays(selectedWeekDays.length > 3 ? selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.TUE).join(',') : '');
     }, [tueBtnColor])
 
     useEffect(() => {
         if (wedBtnColor === styles.btnActive)
             selectedWeekDays == '' ? setSelectedWeekDays(TODO_CONST.WED) : setSelectedWeekDays(selectedWeekDays.concat(',').concat(TODO_CONST.WED));
         else
-           setSelectedWeekDays(selectedWeekDays.length>3?selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.WED).join(','):'');
+            setSelectedWeekDays(selectedWeekDays.length > 3 ? selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.WED).join(',') : '');
     }, [wedBtnColor])
 
 
@@ -258,64 +260,78 @@ const CreateTask = () => {
         if (thuBtnColor === styles.btnActive)
             selectedWeekDays == '' ? setSelectedWeekDays(TODO_CONST.THU) : setSelectedWeekDays(selectedWeekDays.concat(',').concat(TODO_CONST.THU));
         else
-           setSelectedWeekDays(selectedWeekDays.length>3?selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.THU).join(','):'');
+            setSelectedWeekDays(selectedWeekDays.length > 3 ? selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.THU).join(',') : '');
     }, [thuBtnColor])
 
     useEffect(() => {
         if (friBtnColor === styles.btnActive)
             selectedWeekDays == '' ? setSelectedWeekDays(TODO_CONST.FRI) : setSelectedWeekDays(selectedWeekDays.concat(',').concat(TODO_CONST.FRI));
         else
-           setSelectedWeekDays(selectedWeekDays.length>3?selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.FRI).join(','):'');
+            setSelectedWeekDays(selectedWeekDays.length > 3 ? selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.FRI).join(',') : '');
     }, [friBtnColor])
 
 
     useEffect(() => {
         if (satBtnColor === styles.btnActive)
             selectedWeekDays == '' ? setSelectedWeekDays(TODO_CONST.SAT) : setSelectedWeekDays(selectedWeekDays.concat(',').concat(TODO_CONST.SAT));
-        else 
-           setSelectedWeekDays(selectedWeekDays.length>3?selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.SAT).join(','):'');
+        else
+            setSelectedWeekDays(selectedWeekDays.length > 3 ? selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.SAT).join(',') : '');
     }, [satBtnColor])
 
     useEffect(() => {
         if (sunBtnColor === styles.btnActive)
             selectedWeekDays == '' ? setSelectedWeekDays(TODO_CONST.SUN) : setSelectedWeekDays(selectedWeekDays.concat(',').concat(TODO_CONST.SUN));
         else
-           setSelectedWeekDays(selectedWeekDays.length>3?selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.SUN).join(','):'');
+            setSelectedWeekDays(selectedWeekDays.length > 3 ? selectedWeekDays.split(',').filter(elm => elm !== TODO_CONST.SUN).join(',') : '');
     }, [sunBtnColor])
 
-    useEffect(()=>{
-     if(selectedWeekDays.length==0){
-        btnPressHandler('daily');
-        setSelectedSchedule('daily');
-      } 
-     else
-         setSelectedSchedule(selectedWeekDays);
-    },[selectedWeekDays])
+    useEffect(() => {
+        if (selectedWeekDays.length == 0) {
+            btnPressHandler('daily');
+            setSelectedSchedule('daily');
+        }
+        else
+            setSelectedSchedule(selectedWeekDays);
+    }, [selectedWeekDays])
 
-    useEffect(()=>{
-      if(setSelectedScheduleVal>0){
-          setSelectedSchedule(selectedScheduleVal+","+selectedValue)
-      }
-    },[selectedValue,setSelectedScheduleVal])
+    useEffect(() => {
+        if (setSelectedScheduleVal > 0) {
+            setSelectedSchedule(selectedScheduleVal + "," + selectedValue)
+        }
+    }, [selectedValue, setSelectedScheduleVal])
 
-    const addTaskHandler = () =>{
+    const addTaskHandler = async() => {
         console.log('Task crearted');
-        console.log('Title'+title+'Desc:'+desc+'Task Schedule:'+selectedSchedule +' start date:'+selectedStartDate.getDate()
-           +'end date:'+selectedEndDate.getDate()+'reminder:'+reminder);
-        scheduleNotification(title,reminder);   
+        console.log('Title' + title + 'Desc:' + desc + 'Task Schedule:' + selectedSchedule + ' start date:' + selectedStartDate.getDate()
+            + 'end date:' + selectedEndDate.getDate() + 'reminder:' + reminder);
+        scheduleNotification();
+    
+        const task ={
+        taskId:new Date(),    
+        taskTitle:title,
+        taskDesc:desc,
+        taskSchedule:selectedSchedule,
+        taskStartDate:selectedStartDate,
+        taskEndDate:selectedEndDate,
+        taskReminder:reminder
     }
-    const handleButtonPress = () => {
-        LocalNotification()
-      }
+        try {
+            await AsyncStorage.setItem(new Date(), JSON.stringify(task))
+            alert('Data successfully saved!')
+          } catch (e) {
+            alert('Failed to save task'+e)
+          }
+        }
+
     return (<View>
         <View>
             <Text style={styles.screenTitle}>Create Task</Text>
         </View>
         <View style={styles.taskTitle} >
-            <TextInput onChangeText={text=>setTitle(text)} style={{ fontSize: 18}} maxLength={100} placeholder='Title' />
+            <TextInput onChangeText={text => setTitle(text)} style={{ fontSize: 18 }} maxLength={100} placeholder='Title' />
         </View>
         <View style={styles.taskTitle} >
-            <TextInput onChangeText={text=>setDesc(text)} style={{ fontSize: 18, textAlignVertical: "top" }} multiline={true} numberOfLines={5} maxLength={300} placeholder='Description' />
+            <TextInput onChangeText={text => setDesc(text)} style={{ fontSize: 18, textAlignVertical: "top" }} multiline={true} numberOfLines={5} maxLength={300} placeholder='Description' />
         </View>
 
         <View style={styles.switchTaskType}>
@@ -363,7 +379,7 @@ const CreateTask = () => {
                                                     <Text style={styles.textStyle}>Mon</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...tueBtnColor}}
+                                                    style={{ ...styles.openButton, ...tueBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.TUE);
                                                     }}
@@ -371,7 +387,7 @@ const CreateTask = () => {
                                                     <Text style={styles.textStyle}>Tue</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...wedBtnColor}}
+                                                    style={{ ...styles.openButton, ...wedBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.WED);
                                                     }}
@@ -379,7 +395,7 @@ const CreateTask = () => {
                                                     <Text style={styles.textStyle}>Wed</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...thuBtnColor}}
+                                                    style={{ ...styles.openButton, ...thuBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.THU);
                                                     }}
@@ -387,7 +403,7 @@ const CreateTask = () => {
                                                     <Text style={styles.textStyle}>Thu</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...friBtnColor}}
+                                                    style={{ ...styles.openButton, ...friBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.FRI);
                                                     }}
@@ -395,7 +411,7 @@ const CreateTask = () => {
                                                     <Text style={styles.textStyle}>Fri</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...satBtnColor}}
+                                                    style={{ ...styles.openButton, ...satBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.SAT);
                                                     }}
@@ -403,7 +419,7 @@ const CreateTask = () => {
                                                     <Text style={styles.textStyle}>Sat</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...sunBtnColor}}
+                                                    style={{ ...styles.openButton, ...sunBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.SUN);
                                                     }}
@@ -451,7 +467,7 @@ const CreateTask = () => {
                                         <View style={styles.modalView}>
                                             <View style={styles.container}>
                                                 <Text>Every</Text>
-                                                <TextInput style={{ fontSize: 18, padding: 8 }} placeholder='__'  keyboardType="numeric" autoFocus={true} maxLength={3} onChangeText={(v) => setSelectedScheduleVal(v)} />
+                                                <TextInput style={{ fontSize: 18, padding: 8 }} placeholder='__' keyboardType="numeric" autoFocus={true} maxLength={3} onChangeText={(v) => setSelectedScheduleVal(v)} />
                                                 <Picker
                                                     selectedValue={selectedValue}
                                                     style={{ height: 50, width: 150 }}
@@ -521,7 +537,7 @@ const CreateTask = () => {
                     <Text style={styles.taskLabel}>End Date :</Text>
                 </View>
                 <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
-                    onPress={()=>setEndDatePickerVisibility(true)}>
+                    onPress={() => setEndDatePickerVisibility(true)}>
                     <Image style={{
                         padding: 1,
                         height: 25,
@@ -535,7 +551,7 @@ const CreateTask = () => {
                 <Text style={styles.taskLabel}>Set Reminder :</Text>
             </View>
             <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
-                onPress={()=>setDateTimePickerVisibility(true)}>
+                onPress={() => setDateTimePickerVisibility(true)}>
                 <Image style={{
                     padding: 1,
                     height: 25,
@@ -547,25 +563,25 @@ const CreateTask = () => {
             <TouchableHighlight style={{ ...styles.addTask, ...styles.btnActive }} onPress={addTaskHandler}>
                 <Text style={{ ...styles.buttontText, fontWeight: "bold", fontSize: 18 }}> Add Task </Text>
             </TouchableHighlight>
-       
+
             <DateTimePicker
-        isVisible={isStartDatePickerVisible}
-        mode="date"
-        onConfirm={startDateHandler}
-        onCancel={hideDatePicker}
-      />
-       <DateTimePicker
-        isVisible={isEndDatePickerVisible}
-        mode="date"
-        onConfirm={endDateHandler}
-        onCancel={hideDatePicker}
-      />
-      <DateTimePicker
-        isVisible={isDateTimePickerVisible}
-        mode="datetime"
-        onConfirm={reminderHandler}
-        onCancel={hideDatePicker}
-      />
+                isVisible={isStartDatePickerVisible}
+                mode="date"
+                onConfirm={startDateHandler}
+                onCancel={hideDatePicker}
+            />
+            <DateTimePicker
+                isVisible={isEndDatePickerVisible}
+                mode="date"
+                onConfirm={endDateHandler}
+                onCancel={hideDatePicker}
+            />
+            <DateTimePicker
+                isVisible={isDateTimePickerVisible}
+                mode="datetime"
+                onConfirm={reminderHandler}
+                onCancel={hideDatePicker}
+            />
         </ScrollView>
     </View>
 
