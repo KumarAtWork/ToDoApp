@@ -20,7 +20,7 @@ const HomeScreen = () => {
               }}
             >
                 <Stack.Screen name='Tasks' component={TaskList} options={{title:'All Tasks'}}></Stack.Screen>
-                <Stack.Screen name='CreateTask' component={CreateTask}></Stack.Screen>
+                <Stack.Screen name='CreateTask' component={CreateTask} options={{title:'Add Task'}}></Stack.Screen>
                 <Stack.Screen name='TaskDetail' component={TaskDetail} options={({route})=>({title:route.params.taskTitle})}></Stack.Screen>
             </Stack.Navigator>
     )

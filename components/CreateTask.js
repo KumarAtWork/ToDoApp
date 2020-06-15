@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage,View,Vibration, Modal, ScrollView, Text, Image, TextInput, Platform, StyleSheet, Switch, TouchableHighlight, TouchableOpacity, Button } from 'react-native'
+import { AsyncStorage, View, Vibration, Modal, ScrollView, Text, Image, TextInput, Platform, StyleSheet, Switch, TouchableHighlight, TouchableOpacity, Button } from 'react-native'
 import DateTimePicker from 'react-native-modal-datetime-picker'
 import calendarIcon from '../assets/calendar.png'
 import { Picker } from 'native-base'
@@ -7,8 +7,9 @@ import * as TODO_CONST from '../Constants'
 import { Notifications } from 'expo';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
+import MainStyle from '../MainStyle'
 
-const storage_task = '@save_task'
+const storage_task_key = new Date();
 
 const CreateTask = () => {
     // date time picker
@@ -300,40 +301,36 @@ const CreateTask = () => {
         }
     }, [selectedValue, setSelectedScheduleVal])
 
-    const addTaskHandler = async() => {
-        console.log('Task crearted');
-        console.log('Title' + title + 'Desc:' + desc + 'Task Schedule:' + selectedSchedule + ' start date:' + selectedStartDate.getDate()
+    const addTaskHandler = async () => {
+        console.log('Adding Task');
+        console.log('Title:' + title + 'Desc:' + desc + 'Task Schedule:' + selectedSchedule + ' start date:' + selectedStartDate.getDate()
             + 'end date:' + selectedEndDate.getDate() + 'reminder:' + reminder);
         scheduleNotification();
-    
-        const task ={
-        taskId:new Date(),    
-        taskTitle:title,
-        taskDesc:desc,
-        taskSchedule:selectedSchedule,
-        taskStartDate:selectedStartDate,
-        taskEndDate:selectedEndDate,
-        taskReminder:reminder
-    }
-        try {
-            await AsyncStorage.setItem(new Date(), JSON.stringify(task))
-            alert('Data successfully saved!')
-          } catch (e) {
-            alert('Failed to save task'+e)
-          }
+
+        const task = {
+            taskId: storage_task_key,
+            taskTitle: title,
+            taskDesc: desc,
+            taskSchedule: selectedSchedule,
+            taskStartDate: selectedStartDate,
+            taskEndDate: selectedEndDate,
+            taskReminder: reminder
         }
+        try {
+            await AsyncStorage.setItem(storage_task_key, JSON.stringify(task))
+            alert('Data successfully saved!')
+        } catch (e) {
+            alert('Failed to save task' + e)
+        }
+    }
 
-    return (<View>
-        <View>
-            <Text style={styles.screenTitle}>Create Task</Text>
+    return (<View style={MainStyle.container}>
+        <View style={styles.taskTitle} >
+            <TextInput onChangeText={text => setTitle(text)} style={{ fontSize: 20,height:40, lineHeight:40 }} maxLength={100} placeholder='Title' />
         </View>
         <View style={styles.taskTitle} >
-            <TextInput onChangeText={text => setTitle(text)} style={{ fontSize: 18 }} maxLength={100} placeholder='Title' />
+            <TextInput onChangeText={text => setDesc(text)} style={{ fontSize: 20,lineHeight:40, textAlignVertical: "top" }} multiline={true} numberOfLines={5} maxLength={300} placeholder='Description' />
         </View>
-        <View style={styles.taskTitle} >
-            <TextInput onChangeText={text => setDesc(text)} style={{ fontSize: 18, textAlignVertical: "top" }} multiline={true} numberOfLines={5} maxLength={300} placeholder='Description' />
-        </View>
-
         <View style={styles.switchTaskType}>
             <Text style={{ ...styles.taskLabel, flex: 1 }}>Recurring Task :</Text>
             <Switch

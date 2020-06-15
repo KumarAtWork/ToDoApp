@@ -1,5 +1,6 @@
 import React,{Component} from 'react'
 import {View, Text} from 'react-native'
+import MainStyle from '../MainStyle'
 
 class TaskDetail extends Component{
   
@@ -26,7 +27,7 @@ class TaskDetail extends Component{
 
    render(){
     return(
-        <View>
+        <View style={MainStyle.container}>
             <Text>Title : {this.state.title}</Text>
             <Text>Description : {this.state.desc}</Text>
             <Text>Schedule : {this.state.schedule}</Text>

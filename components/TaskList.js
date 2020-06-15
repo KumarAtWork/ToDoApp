@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import { AsyncStorage, StyleSheet, View, Text } from 'react-native'
-import { List, ListItem, Left, Right, Icon, Content } from 'native-base';
-
-
+import { List, ListItem, Left, Right, Icon, Content} from 'native-base';
+import AddButton from './AddButton'
+import MainStyle from '../MainStyle'
 
 class TaskList extends Component {
 
@@ -35,6 +35,8 @@ class TaskList extends Component {
 
     render() {
         return (
+           <>
+           <View style={MainStyle.container}>
             <Content>
                 <List>
                     {this.state.taskList !== '' && this.state.taskList.map(task =>
@@ -49,6 +51,9 @@ class TaskList extends Component {
                     )}
                 </List>
             </Content>
+            </View>
+            <AddButton handler={()=>this.props.navigation.navigate('CreateTask')}/>
+            </>
         )
     }
 

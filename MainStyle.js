@@ -1,6 +1,10 @@
 import {StyleSheet} from 'react-native'
 
-const RootStyle = StyleSheet.create({
+const MainStyle = StyleSheet.create({
+   
+   container:{
+      padding:10
+   },
    button1: {
     backgroundColor: "#F194FF",
     borderRadius: 20,
@@ -10,4 +14,4 @@ const RootStyle = StyleSheet.create({
    }
 })
 
-export default RootStyle
+export default MainStyle
