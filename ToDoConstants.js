@@ -11,3 +11,4 @@ export const MONTHLY = 'monthly';
 export const YEARLY = 'yearly';
 export const TODAY = 'today';
 export const TOMORROW = 'tomorrow';
+export const STORAGE_TASK_KEY = new Date();

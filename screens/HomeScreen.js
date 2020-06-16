@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import TaskList from '../components/TaskList';
 import CreateTask from '../components/CreateTask';
 import TaskDetail from '../components/TaskDetail';
+import ScheduleTask from '../components/ScheduleTask';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +23,7 @@ const HomeScreen = () => {
                 <Stack.Screen name='Tasks' component={TaskList} options={{title:'All Tasks'}}></Stack.Screen>
                 <Stack.Screen name='CreateTask' component={CreateTask} options={{title:'Add Task'}}></Stack.Screen>
                 <Stack.Screen name='TaskDetail' component={TaskDetail} options={({route})=>({title:route.params.taskTitle})}></Stack.Screen>
+                <Stack.Screen name='ScheduleTask' component={ScheduleTask} options={({route})=>({title:route.params.title})}></Stack.Screen>
             </Stack.Navigator>
     )
 }
