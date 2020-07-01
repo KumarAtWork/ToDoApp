@@ -2,19 +2,21 @@ import React,{useState, useEffect} from 'react'
 import { AsyncStorage, View,  Vibration, Modal, ScrollView, Text, Image, TextInput, Platform, StyleSheet, Switch, TouchableHighlight, TouchableOpacity, Button } from 'react-native'
 import DateTimePicker from 'react-native-modal-datetime-picker'
 import calendarIcon from '../assets/calendar.png'
-import { Picker } from 'native-base'
+import { Picker,Left,Right } from 'native-base'
 import * as TODO_CONST from '../ToDoConstants'
 import { Notifications } from 'expo';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
 import MainStyle from '../MainStyle'
+import {useSelector,useDispatch} from 'react-redux'
+
 
 const ScheduleTask = (props) =>{
- const {title, desc, isRecurring} = props.route.params;
+const dispatch = useDispatch();
  // date time picker
  const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
  const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
- const [isDateTimePickerVisible, setDateTimePickerVisibility] = useState(false);
+ const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
 
  const [activeBtn, setActiveBtn] = useState('daily');
  const [dailyBtnColor, SetDailyBtnColor] = useState(MainStyle.btnActive)
@@ -33,9 +35,11 @@ const ScheduleTask = (props) =>{
  const [selectedValue, setSelectedValue] = useState('days');
  const [selectedScheduleVal, setSelectedScheduleVal] = useState(0);
 
+ // settings for all models 
  const [modalVisible, setModalVisible] = useState(false);
-
  const [weekDaysModalVisible, setWeekDaysModalVisible] = useState(false);
+ const [reminderModalVisible, setReminderModalVisible] = useState(false);
+
  const [monBtnColor, SetMonBtnColor] = useState(MainStyle.btnInActive);
  const [tueBtnColor, SetTueBtnColor] = useState(MainStyle.btnInActive);
  const [wedBtnColor, SetWedBtnColor] = useState(MainStyle.btnInActive);
@@ -47,14 +51,32 @@ const ScheduleTask = (props) =>{
 
    // Task Details
    const [selectedSchedule, setSelectedSchedule] = useState('');
-   const [selectedStartDate, setSelectedStartDate] = useState(new Date());
-   const [selectedEndDate, setSelectedEndDate] = useState(new Date());
-   const [reminder, setReminder] = useState('');
+   const [selectedStartDate, setSelectedStartDate] = useState('');
+   const [selectedEndDate, setSelectedEndDate] = useState('');
    const [expoPushToken, setExpoPushToken] = useState('');
    const [notification, setNotification] = useState({});
-
-
-
+   
+   const [reminderVal, setReminderVal] = useState('');
+   const [reminderDateTime, setReminderDateTime] = useState(''); 
+   
+   const setReminder  = (val) =>{
+    const startMinutes = selectedStartDate.getMinutes();
+    const startHours = selectedStartDate.getHours();
+    const v = val.split(" ")[1];
+    const rdt = new Date(selectedStartDate.getTime());
+    switch(v){
+        case 'Due' : setReminderVal(val); setReminderDateTime(selectedStartDate); break;
+        case '5' : setReminderVal(val); rdt.setMinutes(startMinutes-5); setReminderDateTime(rdt);break;
+        case '15' : setReminderVal(val); rdt.setMinutes(startMinutes-15); setReminderDateTime(rdt);break;
+        case '30' : setReminderVal(val); rdt.setMinutes(startMinutes-30); setReminderDateTime(rdt);break;
+        case '1' : setReminderVal(val); rdt.setHours(startHours-1); setReminderDateTime(rdt); break;
+        case '2' : setReminderVal(val); rdt.setHours(startHours-2); setReminderDateTime(rdt);break;
+        case '8' : setReminderVal(val); rdt.setHours(startHours-8); setReminderDateTime(rdt);;break;
+        case '12' : setReminderVal(val); rdt.setHours(startHours-12); setReminderDateTime(rdt);;break;
+    }
+   }
+   useEffect(()=>{if(selectedStartDate!=='')setReminder('On Due')},[selectedStartDate]);
+   const {id,title, desc, isRecurring, schedule, startDate,endDate,reminder,reminderVl} = useSelector(state=>{console.log('TAsk received is :'+JSON.stringify(state.task));return state.task});
    const registerForPushNotificationsAsync = async () => {
        if (Constants.isDevice) {
            const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
@@ -99,7 +121,8 @@ const ScheduleTask = (props) =>{
        // notification (rather than just tapping the app icon to open it),
        // this function will fire on the next tick after the app starts
        // with the notification data.
-       _notificationSubscription = Notifications.addListener(_handleNotification);
+       //_notificationSubscription = 
+       Notifications.addListener(_handleNotification);
    }, []);
 
    const scheduleNotification = async () => {
@@ -110,7 +133,7 @@ const ScheduleTask = (props) =>{
                sound: true
            },
            {
-               time: reminder
+               time: reminderDateTime
            }
        );
        console.log(notificationId);
@@ -131,22 +154,22 @@ const ScheduleTask = (props) =>{
    };
 
    const reminderHandler = (date) => {
-       console.warn("A Reminder date has been picked: ", date);
-       setDateTimePickerVisibility(false);
+       const reminder = typeof(date)==='string'?new Date(Date.parse(date)):date;
+       console.warn("A Reminder date has been picked: ", reminder);
        Notifications.cancelAllScheduledNotificationsAsync();
-       setReminder(date);
+       setReminderDateTime(reminder)
    };
 
    const startDateHandler = (date) => {
        console.warn("Start Date has been picked: ", date);
        setStartDatePickerVisibility(false);
-       setSelectedStartDate(date);
+       setSelectedStartDate(typeof(date)==='string'?new Date(Date.parse(date)):date);
    }
 
    const endDateHandler = (date) => {
        console.warn("End Date has been picked: ", date);
        setEndDatePickerVisibility(false);
-       setSelectedEndDate(date);
+       setSelectedEndDate(typeof(date)==='string'?new Date(Date.parse(date)):date);
    }
 
    const btnPressHandler = (val) => {
@@ -202,7 +225,8 @@ const ScheduleTask = (props) =>{
            case 'tomorrow': SetTomorrowBtnColor(MainStyle.btnActive);
                setActiveStartDate(val);
                var tomorrow = new Date();
-               tomorrow.setDate(new Date().getDate() + 1);
+               var dte = new Date().getDate() + 1;
+               tomorrow.setDate(dte);
                setSelectedStartDate(tomorrow);
                break;
            case 'other': SetOtherBtnColor(MainStyle.btnActive);
@@ -293,40 +317,64 @@ const ScheduleTask = (props) =>{
 
    useEffect(() => {
        if (setSelectedScheduleVal > 0) {
-           setSelectedSchedule(selectedScheduleVal + "," + selectedValue)
+           setSelectedSchedule(selectedScheduleVal + ":" + selectedValue)
        }
    }, [selectedValue, setSelectedScheduleVal])
 
    const scheduleTaskHandler = async () => {
        console.log('Scheduling Task');
-       console.log('Title:' + title + 'Desc:' + desc + 'isRecurring :'+isRecurring + 'Task Schedule:' + selectedSchedule + ' start date:' + selectedStartDate.getDate()
-           + 'end date:' + selectedEndDate.getDate() + 'reminder:' + reminder);
+       console.log('Id:'+id + 'Title:' + title + 'Desc:' + desc + 'isRecurring :'+isRecurring + 'Task Schedule:' + selectedSchedule + ' start date:' + selectedStartDate
+           + 'end date:' + selectedEndDate + 'reminder:' + reminderDateTime + 'reminderVal:'+ reminderVal);
        scheduleNotification();
-
        const task = {
-           taskId: STORAGE_TASK_KEY,
+           taskId: id,
            taskTitle: title,
            taskDesc: desc,
            taskIsRecurring: isRecurring,
            taskSchedule: selectedSchedule,
            taskStartDate: selectedStartDate,
            taskEndDate: selectedEndDate,
-           taskReminder: reminder
+           taskReminder: reminderDateTime,
+           taskReminderVal: reminderVal
        }
        try {
-           await AsyncStorage.setItem(storage_task_key, JSON.stringify(task))
-           alert('Data successfully saved!')
+           await  AsyncStorage.clear();
+           await AsyncStorage.setItem(id, JSON.stringify(task))
+           dispatch({type:'TASK',task:task});
+           alert('Task scheduled successfully for task id:'+id)
        } catch (e) {
            alert('Failed to save task' + e)
        }
-   } 
+   }
+   
+  useEffect(()=>{ 
+   if(schedule!=='' && schedule !== undefined){
+    if(schedule.length===3 || new RegExp(",").test(schedule))
+       btnPressHandler('weekdays');
+    else if(new RegExp(':').test(schedule)){
+       btnPressHandler('customSchedule')
+     }
+    else
+       btnPressHandler(schedule);
+ 
+      setWeekDaysModalVisible(false);
+      setSelectedWeekDays(schedule)
+      setSelectedSchedule(schedule);
+      if(startDate !== '' && startDate !== undefined){
+         startDtBtnPressHandler('other');
+         startDateHandler(startDate);
+      }
+      endDate!=='' && endDate !== undefined && endDateHandler(endDate);
+      reminder !=='' && reminder !== undefined && reminderHandler(reminder)
+ }},[])
 
-return(<View style={MainStyle.container}>
+return(
+<View style={MainStyle.toDoContainer}>
         <View style={MainStyle.taskElement}>
             {isRecurring &&
                 <View>
                     <View>
-                        <Text style={MainStyle.toDoLabelFont}>Schedule :</Text>
+                        <Text style={MainStyle.toDoLabelFont}>Schedule</Text>
                     </View>
                     <View>
                         <View style={{ flexDirection: 'row' }}>
@@ -350,7 +398,7 @@ return(<View style={MainStyle.container}>
                                         <View style={styles.modalView}>
                                             <View style={styles.container}>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...monBtnColor }}
+                                                    style={{ ...styles.weekDaysBtn, ...monBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.MON);
                                                     }}
@@ -358,7 +406,7 @@ return(<View style={MainStyle.container}>
                                                     <Text style={styles.textStyle}>Mon</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...tueBtnColor }}
+                                                    style={{ ...styles.weekDaysBtn, ...tueBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.TUE);
                                                     }}
@@ -366,7 +414,7 @@ return(<View style={MainStyle.container}>
                                                     <Text style={styles.textStyle}>Tue</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...wedBtnColor }}
+                                                    style={{ ...styles.weekDaysBtn, ...wedBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.WED);
                                                     }}
@@ -374,7 +422,7 @@ return(<View style={MainStyle.container}>
                                                     <Text style={styles.textStyle}>Wed</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...thuBtnColor }}
+                                                    style={{ ...styles.weekDaysBtn, ...thuBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.THU);
                                                     }}
@@ -382,7 +430,7 @@ return(<View style={MainStyle.container}>
                                                     <Text style={styles.textStyle}>Thu</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...friBtnColor }}
+                                                    style={{ ...styles.weekDaysBtn, ...friBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.FRI);
                                                     }}
@@ -390,7 +438,7 @@ return(<View style={MainStyle.container}>
                                                     <Text style={styles.textStyle}>Fri</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...satBtnColor }}
+                                                    style={{ ...styles.weekDaysBtn, ...satBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.SAT);
                                                     }}
@@ -398,7 +446,7 @@ return(<View style={MainStyle.container}>
                                                     <Text style={styles.textStyle}>Sat</Text>
                                                 </TouchableHighlight>
                                                 <TouchableHighlight
-                                                    style={{ ...styles.openButton, ...sunBtnColor }}
+                                                    style={{ ...styles.weekDaysBtn, ...sunBtnColor }}
                                                     onPress={() => {
                                                         setWeekDays(TODO_CONST.SUN);
                                                     }}
@@ -407,7 +455,7 @@ return(<View style={MainStyle.container}>
                                                 </TouchableHighlight>
                                             </View>
                                             <TouchableHighlight
-                                                style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
+                                                style={{ ...styles.weekDaysBtn, backgroundColor: "#2196F3" }}
                                                 onPress={() => {
                                                     setWeekDaysModalVisible(!weekDaysModalVisible);
                                                 }}
@@ -460,7 +508,7 @@ return(<View style={MainStyle.container}>
                                                 </Picker>
                                             </View>
                                             <TouchableOpacity
-                                                style={{ ...styles.openButton, ...MainStyle.btnAlwaysActiveColor    }}
+                                                style={{ ...styles.weekDaysBtn, ...MainStyle.btnAlwaysActiveColor    }}
                                                 onPress={() => {
                                                     setModalVisible(!modalVisible);
                                                 }}
@@ -485,93 +533,144 @@ return(<View style={MainStyle.container}>
             </View>
             <View style={MainStyle.taskElement}>
             <View>
-                <Text style={MainStyle.toDoLabelFont}>Start Date :</Text>
+                <Text style={MainStyle.toDoLabelFont}>Start Date</Text>
             </View>
 
-            <View>
-                <View>
                     <View style={{ flexDirection: "row" }}>
                         <TouchableHighlight style={{ ...styles.button, ...todayBtnColor }}
                             onPress={() => startDtBtnPressHandler(TODO_CONST.TODAY)}>
-                            <Text style={MainStyle.buttontText}> Today </Text>
+                            <Text style={MainStyle.buttontText}> Today 9:30 Am</Text>
                         </TouchableHighlight>
 
                         <TouchableHighlight style={{ ...styles.button, ...tomorrowBtnColor }}
                             onPress={() => startDtBtnPressHandler(TODO_CONST.TOMORROW)}>
-                            <Text style={MainStyle.buttontText}> Tomorrow </Text>
+                            <Text style={MainStyle.buttontText}> Tomorrow 9:30 Am</Text>
                         </TouchableHighlight>
 
                         <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
                             onPress={() => startDtBtnPressHandler('other')}>
-                            <Image style={{
+                            {selectedStartDate==''? <Image style={{
                                 padding: 1,
                                 height: 25,
                                 width: 25,
                                 resizeMode: 'stretch'
-                            }} source={calendarIcon} />
+                            }} source={calendarIcon} />:<Text style={MainStyle.buttontText}>{selectedStartDate.toLocaleDateString()+" "+selectedStartDate.toLocaleTimeString()}</Text>}
                         </TouchableHighlight>
-
-                    </View>
-
-                </View>
             </View>
             </View>
+            {isRecurring &&
+            <View style={{flexDirection:"row"}}>
+                <Left>
             <View style={MainStyle.taskElement}>
-            {isRecurring && <View>
                 <View>
-                    <Text style={MainStyle.toDoLabelFont}>End Date :</Text>
+                    <Text style={MainStyle.toDoLabelFont}>End Date</Text>
                 </View>
-                <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
+                <TouchableHighlight style={{ ...styles.button, ...otherBtnColor, }}
                     onPress={() => setEndDatePickerVisibility(true)}>
-                    <Image style={{
+                    {selectedEndDate==''?<Image style={{
                         padding: 1,
                         height: 25,
                         width: 25,
                         resizeMode: 'stretch'
-                    }} source={calendarIcon} />
+                    }} source={calendarIcon} />:<Text style={MainStyle.buttontText}>{selectedEndDate.toLocaleDateString()+" "+selectedEndDate.toLocaleTimeString()}</Text>}
                 </TouchableHighlight>
             </View>
-            }
-            </View>
+            </Left>
+            <Right>
             <View style={MainStyle.taskElement}>
             <View>
-                <Text style={MainStyle.toDoLabelFont}>Set Reminder :</Text>
+                <Text style={MainStyle.toDoLabelFont}>Reminder</Text>
             </View>
             <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
-                onPress={() => setDateTimePickerVisibility(true)}>
-                <Image style={{
+                onPress={() => setReminderModalVisible(true)}>
+                {reminderVal == ''|| reminderVal == undefined ?<Image style={{
                     padding: 1,
                     height: 25,
                     width: 25,
                     resizeMode: 'stretch'
-                }} source={calendarIcon} />
+                }} source={calendarIcon} />:<Text style={MainStyle.buttontText}>{reminderVal}</Text>}
             </TouchableHighlight>
             </View>
+            </Right>
+            </View>
+            }
+            {!isRecurring && <View style={MainStyle.taskElement}>
+            <View>
+                <Text style={MainStyle.toDoLabelFont}>Reminder</Text>
+            </View>
+            <TouchableHighlight style={{ ...styles.button, ...otherBtnColor }}
+                onPress={() => setReminderModalVisible(true)}>
+                {reminderVal == '' || reminderVal == undefined ?<Image style={{
+                    padding: 1,
+                    height: 25,
+                    width: 25,
+                    resizeMode: 'stretch'
+                }} source={calendarIcon} />:<Text style={MainStyle.buttontText}>{reminderVal}</Text>}
+            </TouchableHighlight>
+            </View>
+            }
             <View style={MainStyle.taskElement}>
             <TouchableHighlight style={{ ...MainStyle.btnFull, ...MainStyle.btnActive }} onPress={scheduleTaskHandler}>
                 <Text style={{ ...MainStyle.buttontText, fontWeight: "bold", fontSize: 18 }}> Add Task </Text>
             </TouchableHighlight>
              </View>
-
+ 
             <DateTimePicker
                 isVisible={isStartDatePickerVisible}
-                mode="date"
+                mode="datetime"
                 onConfirm={startDateHandler}
                 onCancel={hideDatePicker}
             />
             <DateTimePicker
                 isVisible={isEndDatePickerVisible}
-                mode="date"
+                mode="datetime"
                 onConfirm={endDateHandler}
                 onCancel={hideDatePicker}
             />
             <DateTimePicker
-                isVisible={isDateTimePickerVisible}
+                isVisible={isTimePickerVisible}
                 mode="datetime"
                 onConfirm={reminderHandler}
                 onCancel={hideDatePicker}
             />
-   </View>)
+            <Modal
+                                    animationType="slide"
+                                    transparent={true}
+                                    visible={reminderModalVisible}
+                                >
+                                    <View style={styles.centeredView}>
+                                        <View style={styles.modalView}>
+                                            <View style={styles.container}>
+                                             <Picker
+                                                    selectedValue={selectedValue}
+                                                    style={{ height: 50, width: 120 }}
+                                                    itemStyle={{paddingLeft:0, marginLeft:0}}
+                                                    onValueChange={(itemValue, itemIndex) => setReminder(itemValue)}
+                                                    >
+                                                    
+                                                    <Picker.Item label="on Due" value="on Due"/>
+                                                    <Picker.Item label="Before 5 minutes" value="Before 5 minutes"></Picker.Item>
+                                                    <Picker.Item label="Before 15 minutes" value="Before 15 minutes"></Picker.Item>
+                                                    <Picker.Item label="Before 30 minutes" value="Before 30 minutes"></Picker.Item>
+                                                    <Picker.Item label="Before 1 hour" value="Before 1 hour"></Picker.Item>
+                                                    <Picker.Item label="Before 2 hours" value="Before 2 hours"></Picker.Item>
+                                                    <Picker.Item label="Before 8 hours" value="Before 8 hours"></Picker.Item>
+                                                    <Picker.Item label="Before 12 hours" value="Before 12 hours"></Picker.Item>
+                                                </Picker>
+                                            </View>
+                                            <TouchableOpacity
+                                                style={{ ...styles.weekDaysBtn}}
+                                                onPress={() => {
+                                                    setReminderModalVisible(!reminderModalVisible);
+                                                }}
+                                            >
+                                                <Text style={styles.textStyle}>done</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </Modal>
+   </View>
+   )
 }
 
 
@@ -606,7 +705,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        marginTop: 2
+        marginVertical:2
     },
     modalView: {
         backgroundColor: "white",
@@ -617,16 +716,16 @@ const styles = StyleSheet.create({
             width: 0,
             height: 5
         },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.85,
         shadowRadius: 5.84,
         elevation: 2
     },
-    openButton: {
+    weekDaysBtn: {
         borderRadius: 10,
-        padding: 8,
+        padding: 4,
         elevation: 2,
-        marginTop: 5,
-        marginHorizontal:2
+        marginVertical: 5,
+        marginHorizontal:3
     },
     textStyle: {
         color: "white",

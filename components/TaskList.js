@@ -1,26 +1,22 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AsyncStorage, StyleSheet, View, Text } from 'react-native'
-import { List, ListItem, Left, Right, Icon, Content} from 'native-base';
+import { List, ListItem, Left, Right, Icon } from 'native-base';
 import AddButton from './AddButton'
 import MainStyle from '../MainStyle'
+import {useDispatch} from 'react-redux'
 
-class TaskList extends Component {
+const TaskList = (props) =>{
 
-    state = {
-        taskList: [],
-    }
-
-    componentDidMount() {
-        this.retrieveTaskList().then(res => this.setState({
-            taskList: res
-        })
-        ).catch(err => console.error('error on fetching list' + err));
-    }
+    const [taskList,setTaskList] = useState([]);
+    const dispatch = useDispatch();
+    useEffect(() => {
+        retrieveTaskList().then(res =>setTaskList(res)).catch(err => console.error('error on fetching list' + err));
+    }, [])
 
     retrieveTaskList = async () => {
         const keys = await AsyncStorage.getAllKeys();
         console.log('result:' + keys);
-        return await this.resultList(keys);
+        return await resultList(keys);
     }
 
     resultList = async (keys) => {
@@ -33,14 +29,16 @@ class TaskList extends Component {
         return lst;
     }
 
-    render() {
-        return (
-           <>
-           <View style={MainStyle.container}>
-            <Content>
-                <List>
-                    {this.state.taskList !== '' && this.state.taskList.map(task =>
-                        <ListItem style={{paddingTop:10}} onPress={()=>this.props.navigation.navigate('TaskDetail',{...task})}>
+    return(<View  style={{...MainStyle.toDoBackGround,flex:1}}>
+           <View style={MainStyle.toDoContainer}>
+                <List style={MainStyle.toDoViewColor}>
+                    {taskList !== '' && taskList.map(task =>
+                        <ListItem key={task.taskId} onPress={()=>{
+                            console.log('task:'+JSON.stringify(task));
+                            dispatch({type:'TASK',task:task}); 
+                            return props.navigation.navigate('TaskDetail');
+                           }
+                            }>
                             <Left>
                                 <Text>{task.taskTitle}</Text>
                             </Left>
@@ -50,16 +48,11 @@ class TaskList extends Component {
                         </ListItem>
                     )}
                 </List>
-            </Content>
             </View>
-            <AddButton handler={()=>this.props.navigation.navigate('CreateTask')}/>
-            </>
-        )
-    }
-
+            <AddButton handler={()=>props.navigation.navigate('CreateTask')}/>
+            </View>
+     )
 }
-
-
 const styles = StyleSheet.create({
     button: {
         backgroundColor: "#F194FF",

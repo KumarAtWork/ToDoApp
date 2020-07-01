@@ -1,26 +1,35 @@
 import { StyleSheet } from 'react-native'
+import {APP_BTN_ACTIVE_COLOR, APP_BTN_INACTIVE_COLOR} from './ToDoConstants'
 
 const MainStyle = StyleSheet.create({
-   
-   toDoFont:{
-    fontSize:21,
-    lineHeight:21,
-    fontWeight:"200",
+
+   toDoBackGround: {
+      backgroundColor:"#f5f3f0"
+   },
+   toDoContainer: {
+      margin:5,
+      fontSize:18,
+      lineHeight:18,
+      fontWeight:"200",
    },
    
+   toDoTextView:{
+      padding:12,
+      marginVertical: 5,
+      backgroundColor: "#ffffff",
+      minHeight:50
+   },
    toDoLabelFont: {
       fontSize: 17,
       fontWeight: '300',
    },
-
+   toDoViewColor:{
+      backgroundColor:"#ffffff"
+   },
    taskElement:{
-    marginVertical:15
+     marginVertical:15
    },
-
-   container: {
-      padding: 10
-   },
-   button1: {
+   button2: {
       backgroundColor: "#F194FF",
       borderRadius: 20,
       padding: 5,
@@ -29,27 +38,24 @@ const MainStyle = StyleSheet.create({
    },
 
    btnActive: {
-      backgroundColor: "#059CE2"
+      backgroundColor: APP_BTN_ACTIVE_COLOR
    },
    btnInActive: {
-      backgroundColor: "#0280BA"
+      backgroundColor: APP_BTN_INACTIVE_COLOR
    },
    btnAlwaysActiveColor:{
       backgroundColor:"#03cafc"
    },
-
    btnFull: {
-      alignItems: "center",
-      margin: 4,
-      marginTop: 10,
-      padding: 30,
-      height: 60,
+      marginVertical:10,
+      padding: 25,
+      height: 40,
       alignContent: 'center',
       alignItems: 'center',
       justifyContent: 'center'
    },
    buttontText: {
-      color: '#fff',
+      color: '#ffffff',
       textAlign: "center"
   }
 })
